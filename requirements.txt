@@ -1,0 +1,15 @@
+transformers
+peft
+bitsandbytes
+accelerate
+bitsandbytes-cuda117
+rich
+langchain_community
+boto3
+anthropic
+langchain
+langchain_anthropic
+tabulate
+uvicorn
+streamlit==1.37.1
+pandas

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        /* Add your styles here */
+        .sidebar {
+            width: 100%;
+            background-color: #f4f4f4;
+            border-right: 2px solid #ddd;
+        }
+        .sidebar img {
+            width: 100%;
+            height: auto;
+        }
+        .sidebar h3 {
+            font-size: 18px;
+        }
+        .sidebar a {
+            color: #1a73e8;
+            text-decoration: none;
+        }
+        .sidebar a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <h1>Design Using LLM and LangChain Agent Integration</h1>
+
+        <div class="section" id="overview">
+            <h2>1. Overview</h2>
+            <p>
+                The system is designed to analyze call transcripts by:
+            </p>
+            <ol>
+                <li><strong>Summarizing</strong>: Generating a summary, key takeaways, and follow-up actions from the call transcript.</li>
+                <li><strong>Assessing</strong>: Evaluating the quality of the call based on predefined criteria.</li>
+            </ol>
+                    <!-- Design Diagram Section -->
+            <!-- <div class="diagram">
+                <h3>System Design</h3>
+                <img src="CallCenterTranscriptDesign.png" alt="Design Flow Diagram">
+                <p>Figure 1: Overview of the LangChain Agent integration process.</p>
+            </div> -->
+            <p>
+                The core components of the system are:
+            </p>
+            <ul>
+                <li><strong>LangChain</strong>: For creating prompts and processing responses from language models.</li>
+                <li><strong>Anthropic API</strong>: For interacting with the language model.</li>
+            </ul>
+        </div>
+    
+        <div class="section" id="components">
+            <h2>2. Components</h2>
+
+            <div>
+                <h3>Components Used</h3>
+                <ul>
+                    <li><strong>ChatPromptTemplate</strong>: Defines the prompt template for the language model, including formatting instructions.</li>
+                    <li><strong>PydanticOutputParser</strong>: Parses the output from the language model into structured data.</li>
+                    <li><strong>ChatAnthropic</strong>: Interacts with the Anthropics API to get responses from the language model.</li>
+                </ul>
+            </div>
+    
+            <div>
+                <h3>Steps Involved</h3>
+                <ol>
+                    <li><strong>Processing Transcript</strong>: Convert raw JSON input into a readable transcript format.</li>
+                    <li><strong>Generating Summary and Assessment</strong>:
+                        <ul>
+                            <li><strong>Prompt Creation</strong>: Format the prompt using <code>ChatPromptTemplate</code>.</li>
+                            <li><strong>Model Interaction</strong>: Use <code>ChatAnthropic</code> to send the prompt and receive the summary.</li>
+                            <li><strong>Parsing Response</strong>: Extract relevant data using <code>PydanticOutputParser</code>.</li>
+                        </ul>
+                    </li>
+                </ol>
+            </div>
+        </div>
+        <h4>How to test</h4>
+        <ul>
+            <li><strong>Upload a JSON File</strong>: Use the file uploader to select and upload a JSON file containing the call transcript. The JSON should include fields like `call_ID`, `CSR_ID`, `call_transcript`, `call_date`, and `call_time`.</li>
+            <li><strong>Paste JSON Text</strong>: Alternatively, you can paste the JSON text directly into the text area. Ensure the JSON format is correct.</li>
+            <li><strong>Submit</strong>: Click the "Submit" button to process the transcript. The application will display:
+                <ul>
+                    <li><strong>Call Summary</strong>: A summary of the call.</li>
+                    <li><strong>Key Takeaways</strong>: Important points from the call.</li>
+                    <li><strong>Follow-Up Actions</strong>: Actions categorized into following types:
+                        <ul>
+                            <li>Initiate refund</li>
+                            <li>Process improvement</li>
+                            <li>Follow up with customer</li>
+                            <li>Others</li>
+                        </ul>
+                    </li>
+                    <li><strong>Call Assessment and Quality Score</strong>: Evaluation of the call based on predefined criteria.</li>
+                </ul>
+            </li>
+        </ul>
+
+    </div>
+</body>
+</html>
