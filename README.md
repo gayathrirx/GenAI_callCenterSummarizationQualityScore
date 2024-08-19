@@ -26,6 +26,7 @@ The core components of the system are:
 
 - **LangChain**: For creating prompts and processing responses from language models.
 - **Anthropic API**: For interacting with the language model.
+- **LLM**: Claude 3 Sonnet
 
 ## 2. Components
 
