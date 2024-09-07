@@ -18,7 +18,7 @@ The system is designed to analyze call transcripts by:
 
 ### System Design
 
-![Design Flow Diagram](CallCenterTranscriptDesign.png)
+![Design Flow Diagram](images/CallCenterTranscriptDesign.png)
 
 _Figure 1: Overview of the LangChain Agent integration process._
 
