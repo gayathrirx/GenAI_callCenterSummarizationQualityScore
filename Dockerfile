@@ -16,4 +16,4 @@ RUN pip install --no-cache-dir --upgrade -r requirements.txt
 COPY --chown=user . /app
 
 # Set the command to run Streamlit when the container starts
-CMD ["streamlit", "run", "streamlit_app.py", "--server.port=7860"]
+CMD ["streamlit", "run", "Home.py", "--server.port=7860"]

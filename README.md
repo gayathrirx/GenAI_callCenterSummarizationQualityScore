@@ -6,7 +6,7 @@ colorTo: yellow
 sdk: docker
 pinned: false
 ---
-# Hosted in Hugging Face - https://huggingface.co/spaces/gaamaa/callCenterSummarizationQualityScore
+
 # Design Using LLM and LangChain Agent Integration
 
 ## 1. Overview
@@ -26,8 +26,6 @@ The core components of the system are:
 
 - **LangChain**: For creating prompts and processing responses from language models.
 - **Anthropic API**: For interacting with the language model.
-- **LLM**: Claude 3 Sonnet
-- **Test Data Used**: AWS Amazon Bedrock Call Analytics Sample Data Set</li>
 
 ## 2. Components
 

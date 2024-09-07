@@ -13,3 +13,13 @@ tabulate
 uvicorn
 streamlit==1.37.1
 pandas
+psycopg2
+asyncpg
+langchain_openai
+langchain_experimental
+streamlit
+matplotlib
+numpy
+gtts
+# playsound
+google-cloud-texttospeech

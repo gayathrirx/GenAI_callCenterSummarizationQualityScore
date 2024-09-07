@@ -5,6 +5,7 @@ from pathlib import Path
 from functools import partial
 from typing import List, Dict
 
+from persist_data import insert_assessment_data, insert_follow_up_actions
 from pydantic import BaseModel, Field
 
 import anthropic
@@ -34,19 +35,19 @@ def pretty_print_json(data):
     # rprint(Markdown(f"```json\n{data}\n```"))
 
 # Read call transcript file
-transcripts = Path("data")
-call_transcript_file = "sample1.json"
-transcript_path = transcripts / call_transcript_file
+# transcripts = Path("data")
+# call_transcript_file = "sample1.json"
+# transcript_path = transcripts / call_transcript_file
 
-with open(transcript_path, "r") as f:
-    transcript = f.read()
+# with open(transcript_path, "r") as f:
+#     transcript = f.read()
 
-transcript_dict = json.loads(transcript)
-call_date = transcript_dict['call_ID']
-call_time = transcript_dict['CSR_ID']
-call_transcript = transcript_dict['call_transcript']
-call_date = transcript_dict['call_date']
-call_time = transcript_dict['call_time']
+# transcript_dict = json.loads(transcript)
+call_ID = "unknown"
+CSR_ID = "unknown"
+# call_transcript = transcript_dict['call_transcript']
+# call_date = transcript_dict['call_date']
+# call_time = transcript_dict['call_time']
 
 # pretty_print_json(transcript_dict)
 # print(call_transcript)
@@ -67,13 +68,18 @@ class CallSummary(BaseModel):
 summarization_parser = PydanticOutputParser(pydantic_object=CallSummary)
 
 summarization_template = """
-Please provide a summary of the following call transcript provided between <transcript></transcript> tags. 
+Provide a summary of the following call transcript provided between <transcript></transcript> tags. 
 
-Capture key takeaways and specific follow up actions. 
+Generate key takeaways and specific follow up actions. 
 
-Follow up actions can be categorized as 'Initiate refund' ,'Follow up with customer', 'Process improvement' and 'Others', 
+Categorize the follow up actions as 'Initiate refund' ,'Follow up with customer', 'Process improvement' and 'Others', 
 
-Skip the preamble and go straight to the answer. <transcript>{call_transcript}</transcript> 
+Skip the preamble and go straight to the answer. 
+Include details of refund and timing if discussed in the call for 'Initiate refund' category.
+Include timing for follow up  if discussed in the call for 'Follow up with customer' category.
+Include just one Process improvement action for 'Process improvement' category.
+
+<transcript>{call_transcript}</transcript> 
 
 Format your response per the instructions below: {format_instructions} 
 
@@ -94,8 +100,11 @@ summarization_prompt = ChatPromptTemplate.from_template(
 # rprint(summarization_prompt.dict())
 
 def process_transcript(transcript: str) -> str:
+    global call_ID, CSR_ID
     json_transcript = json.loads(transcript)
     call_transcript = "\n".join(json_transcript.get("call_transcript", []))
+    call_ID = json_transcript.get('call_ID')
+    CSR_ID = json_transcript.get('CSR_ID')
     return call_transcript
 
 # Initialize the ChatAnthropic client
@@ -129,39 +138,14 @@ def create_messages(prompt: str) -> List[Dict[str, str]]:
     return [{"role": "user", "content": prompt}]
 
 # Define the components for the chain
-def run_chain_step(process_transcript, summarization_prompt, llm, extract_from_xml_tag, parser):
-    processed_transcript = process_transcript(transcript)
+def run_chain_step(processed_transcript, summarization_prompt, llm, extract_from_xml_tag, parser):
+    # processed_transcript = process_transcript(transcript)
     formatted_prompt = summarization_prompt.format(call_transcript=processed_transcript)
     messages = create_messages(formatted_prompt)
     response = llm(messages)
     # extracted_output = extract_from_xml_tag(response, tag="output")
     # parsed_output = parser.parse_raw(extracted_output)
     return response
-
-# Run the chain
-# pretty_print_json(transcript)
-# print("Running summarization chain...")
-
-# response = run_chain_step(
-#     process_transcript,
-#     summarization_prompt,
-#     llm,
-#     extract_from_xml_tag,
-#     summarization_parser
-# )
-# data = json.loads(response)
-# pretty_print_json(summary)
-
-# Save call summary to database - Summary - TODO
-# Prepare data for tables
-# summary_data = [
-#     ["Call Summary", data["call_summary"]]
-# ]
-
-# key_takeaways_data = [
-#     [f"{i + 1}.", takeaway]
-#     for i, takeaway in enumerate(data["key_takeaways"])
-# ]
 
 # Separate follow-up actions by category
 category_actions = {
@@ -171,64 +155,31 @@ category_actions = {
     "Others": []
 }
 
-# for action in data["follow_up_actions"]:
-#     for category in category_actions:
-#         if action.startswith(category):
-#             category_actions[category].append(action)
-#             break
-
-# Convert to table data format
-# def convert_to_table_data(category, actions):
-#     return [[category, action] for action in actions]
-
-# # Create table data for each category
-# follow_up_tables = {
-#     category: convert_to_table_data(category, actions)
-#     for category, actions in category_actions.items() if actions
-# }
-
-# Define column headers
-# summary_headers = ["Description", "Details"]
-# key_takeaways_headers = ["#", "Key Takeaway"]
-# follow_up_headers = ["Category", "Action"]
-
-# # Print tables
-# print("Call Summary:")
-# print(tabulate(summary_data, headers=summary_headers, tablefmt="grid"))
-
-# print("\nKey Takeaways:")
-# print(tabulate(key_takeaways_data, headers=key_takeaways_headers, tablefmt="grid"))
-
-# print("\nFollow-Up Actions:")
-# for category, table_data in follow_up_tables.items():
-#     print(f"\n{category} Actions:")
-#     print(tabulate(table_data, headers=follow_up_headers, tablefmt="grid"))
-
 assessment_template = """
 Evaluate call transcript against categories shown between <categories></categories> tags and provide score as 'High', 'Medium', 'Low' for each category.
-Skip the preamble and go straight to the answer.
+Skip the preamble and go straight to the answer in one sentence per category.
 
 <categories>
 1. Communication Skills:
- - Clarity: How clearly and concisely does the CSR communicate information?
- - Active Listening: Does the CSR actively listen to the customer's concerns and questions?
- - Empathy: How well does the CSR demonstrate empathy and understanding towards the customer?
+   - Message Delivery: How clearly and effectively does the representative convey information to the customer?
+   - Engagement: To what extent does the representative actively engage with the customer's needs and concerns?
 
-2. Problem Resolution:
- - Effectiveness: How well did the CSR resolve the customer's issue or answer their question?
- - Timeliness: Was the issue resolved in a reasonable amount of time?
+2. Issue Resolution:
+   - Problem-Solving: How effectively does the representative address and resolve the customer's issue?
+   - Efficiency: Was the issue handled in a timely and efficient manner?
 
-3. Product Knowledge:
- - Familiarity: Does the CSR have a good understanding of the company's products and services?
- - Accuracy: How accurate and precise are the answers provided by the CSR?
+3. Product Expertise:
+   - Knowledge Depth: Does the representative exhibit a deep understanding of the company's offerings?
+   - Response Accuracy: How precise and correct are the representative's responses regarding the products or services?
 
-4. Professionalism:
- - Tone and Manner: How professional is the tone and manner of the CSR throughout the call?
- - Courtesy: Does the CSR maintain a courteous and respectful attitude towards the customer?
+4. Professional Conduct:
+   - Tone and Delivery: How professional and appropriate is the representative's tone and delivery throughout the call?
+   - Respectfulness: Does the representative consistently demonstrate respect and courtesy towards the customer?
 
-5. Problem Escalation:
- - Recognition: Did the CSR recognize when an issue required escalation to a higher level of support?
- - Handoff: How smoothly and effectively did the CSR transfer the call if escalation was necessary?
+5. Escalation Handling:
+   - Escalation Appropriateness: Did the representative correctly identify when to escalate an issue?
+   - Smooth Transition: How effectively does the representative manage the escalation process or transition to another department?
+
 <categories>
 
 Here is the call transcript:
@@ -268,45 +219,14 @@ assessment_prompt = ChatPromptTemplate.from_template(
     },
 )
 
-def run_chain_step2(process_transcript, assessment_prompt, llm, extract_from_xml_tag, parser):
-    processed_transcript = process_transcript(transcript)
+def run_chain_step2(processed_transcript, assessment_prompt, llm, extract_from_xml_tag, parser):
+    # processed_transcript = process_transcript(transcript)
     formatted_prompt = assessment_prompt.format(transcript=processed_transcript)
     messages = create_messages(formatted_prompt)
     response = llm(messages)
     # extracted_output = extract_from_xml_tag(response, tag="output")
     # parsed_output = parser.parse_raw(extracted_output)
     return response
-
-# Construct the chain by essembing all required components via LangChain
-
-# response2 = run_chain_step2(
-#     process_transcript,
-#     assessment_prompt,
-#     llm,
-#     extract_from_xml_tag,
-#     assessment_parser
-# )
-# # Preview content of the call_assessment JSON object
-# call_assessment = json.loads(response2)
-# # pretty_print_json(call_assessment)
-
-# # Preview score values for each category provided in the LLM output
-# # for category, details in call_assessment.items():
-# #         score = details.get("score", "N/A")
-# #         explanation = details.get("score_explanation", "No explanation provided")
-# #         print(f"{category}: score={score}, explanation={explanation}")
-# # Prepare data for tabulate
-# table_data = [
-#     [category, details['score'], details['score_explanation']]
-#     for category, details in call_assessment.items()
-# ]
-
-# # Define column headers
-# headers = ["Category", "Score", "Explanation"]
-
-# # Print table
-# print("Call Assessment and Quality Score")
-# print(tabulate(table_data, headers=headers, tablefmt="grid"))
 
 def generate_tables(response):
     data = json.loads(response)
@@ -331,10 +251,21 @@ def generate_tables(response):
                 category_actions[category].append(action)
                 break
 
+    # follow_up_tables = {
+    #     category: pd.DataFrame([[category, action] for action in actions], columns=["Category", "Action"])
+    #     for category, actions in category_actions.items() if actions
+    # }
+
     follow_up_tables = {
-        category: pd.DataFrame([[category, action] for action in actions], columns=["Category", "Action"])
-        for category, actions in category_actions.items() if actions
+    category: pd.DataFrame(
+        [[call_ID, CSR_ID, category, action] for action in actions],
+        columns=["Call ID", "CSR ID", "Category", "Action"]
+    )
+    for category, actions in category_actions.items() if actions
     }
+
+    #Persist data into follow_up_actions table
+    insert_follow_up_actions(follow_up_tables)
     
     return {
         "summary_data": summary_data,
@@ -345,9 +276,11 @@ def generate_tables(response):
 def generate_assessment_tables(response2):
     call_assessment = json.loads(response2)
     table_data = pd.DataFrame([
-        [category, details['score'], details['score_explanation']]
+        [call_ID, CSR_ID, category, details['score'], details['score_explanation']]
         for category, details in call_assessment.items()
-    ], columns=["Category", "Score", "Explanation"])
+    ], columns=["Call ID", "CSR ID", "Category", "Score", "Explanation"])
+
+    insert_assessment_data(table_data)
 
     return {
         "table_data": table_data
