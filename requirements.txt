@@ -1,25 +1,26 @@
-transformers
-peft
-bitsandbytes
-accelerate
-bitsandbytes-cuda117
+# transformers
+# peft
+# bitsandbytes
+# accelerate
+# bitsandbytes-cuda117
 rich
 langchain_community
-boto3
+# boto3
 anthropic
 langchain
 langchain_anthropic
 tabulate
-uvicorn
+# uvicorn
 streamlit==1.37.1
 pandas
 psycopg2
-asyncpg
+# asyncpg
 langchain_openai
 langchain_experimental
 streamlit
 matplotlib
-numpy
+# numpy
 gtts
 # playsound
-google-cloud-texttospeech
+# google-cloud-texttospeech
+sagemaker
