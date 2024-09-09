@@ -12,7 +12,7 @@ pinned: false
 This project automates the process of summarizing call center interactions and generating a quality score for customer representatives. It leverages advanced language models (LLMs) and integrates with various tools to provide efficient call processing and reporting capabilities.
 
 ## Watch Demo
-
+[Click here to watch the video](images/CallCentersummaryDemoVideo.mov)
 <video width="600" controls>
   <source src="images/CallCentersummaryDemoVideo.mov" type="video/quicktime">
   Your browser does not support the video tag.
